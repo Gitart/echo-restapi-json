@@ -45,7 +45,7 @@ func main() {
 		return c.String(http.StatusBadRequest, "Bad request.")
 	})
 
-	e.POST("/magazines", func(c echo.Context) error { 
+	e.POST("/magazines", func(c echo.Context) error {
 		new_magazine := new(models.Magazine)
 		err := c.Bind(new_magazine)
 		if err != nil {
@@ -54,6 +54,36 @@ func main() {
 
 		lot = append(lot, *new_magazine)
 		return c.JSON(http.StatusOK, lot)
+	})
+
+	e.PUT("/magazines/:id", func(c echo.Context) error {
+		updated_magazine := new(models.Magazine)
+		err := c.Bind(updated_magazine)
+		if err != nil {
+			return c.String(http.StatusBadRequest, "Bad request.")
+		}
+		for i, magazine := range lot {
+			if strconv.Itoa(magazine.Id) == c.Param("id") {
+				lot = append(lot[:i], lot[i+1:]...)
+				lot = append(lot, *updated_magazine)
+
+				return c.JSON(http.StatusOK, lot)
+			}
+			return c.String(http.StatusBadRequest, "Bad request.")
+		}
+
+		return c.JSON(http.StatusOK, lot)
+	})
+
+	e.DELETE("/magazines/:id", func(c echo.Context) error {
+		for i, magazine := range lot {
+			if strconv.Itoa(magazine.Id) == c.Param("id") {
+				lot = append(lot[:i], lot[i+1:]...)
+
+				return c.JSON(http.StatusOK, lot)
+			}
+		}
+		return c.String(http.StatusBadRequest, "Bad request.")
 	})
 
 	e.Start(":5000")
