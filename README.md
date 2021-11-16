@@ -7,7 +7,7 @@ Run it in ```./src``` with:
 go run server.go
 ```
  - The documentation, here => <a href="https://echo.labstack.com/guide/">echo.labstack.com</a>.
- - Fake data. => <a href="https://mockaroo.com/">mockaroo.com</a>
+ - Fake data => <a href="https://mockaroo.com/">mockaroo.com</a>
 
 #### GET ALL
 <img src="https://i.ibb.co/cLKzQ7v/getall.png" alt="getall">
