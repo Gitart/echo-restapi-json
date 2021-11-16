@@ -2,6 +2,9 @@ package main
 
 import (
 	"api/models"
+	"encoding/json"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -10,34 +13,41 @@ import (
 
 type magazines []models.Magazine
 
+func readJson() magazines {
+	file, err := ioutil.ReadFile("./document.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+	m := magazines{}
+	err = json.Unmarshal(file, &m)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return m
+}
+
+func writeJson(data magazines) {
+	json_to_file, _ := json.Marshal(data)
+	err := ioutil.WriteFile("./document.json", json_to_file, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
 	e := echo.New()
 
-	lot := magazines{
-		{
-			Id:      1,
-			Title:   "Top models",
-			Company: "Brezz",
-			Price:   29.99,
-			Month:   12,
-			Year:    2020,
-		},
-		{
-			Id:      2,
-			Title:   "World ranking",
-			Company: "Vuzz",
-			Price:   19.99,
-			Month:   05,
-			Year:    2019,
-		},
-	}
-
 	e.GET("/magazines", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, lot)
+		m := readJson()
+
+		return c.JSON(http.StatusOK, m)
 	})
 
 	e.GET("/magazines/:id", func(c echo.Context) error {
-		for _, magazine := range lot {
+		m := readJson()
+
+		for _, magazine := range m {
 			if c.Param("id") == strconv.Itoa(magazine.Id) {
 				return c.JSON(http.StatusOK, magazine)
 			}
@@ -46,41 +56,51 @@ func main() {
 	})
 
 	e.POST("/magazines", func(c echo.Context) error {
+		m := readJson()
+
 		new_magazine := new(models.Magazine)
 		err := c.Bind(new_magazine)
 		if err != nil {
 			return c.String(http.StatusBadRequest, "Bad request.")
 		}
 
-		lot = append(lot, *new_magazine)
-		return c.JSON(http.StatusOK, lot)
+		m = append(m, *new_magazine)
+
+		writeJson(m)
+		return c.JSON(http.StatusOK, m)
 	})
 
 	e.PUT("/magazines/:id", func(c echo.Context) error {
+		m := readJson()
+
 		updated_magazine := new(models.Magazine)
 		err := c.Bind(updated_magazine)
 		if err != nil {
 			return c.String(http.StatusBadRequest, "Bad request.")
 		}
-		for i, magazine := range lot {
+		for i, magazine := range m {
 			if strconv.Itoa(magazine.Id) == c.Param("id") {
-				lot = append(lot[:i], lot[i+1:]...)
-				lot = append(lot, *updated_magazine)
+				m = append(m[:i], m[i+1:]...)
+				m = append(m, *updated_magazine)
 
-				return c.JSON(http.StatusOK, lot)
+				writeJson(m)
+
+				return c.JSON(http.StatusOK, m)
 			}
-			return c.String(http.StatusBadRequest, "Bad request.")
 		}
 
-		return c.JSON(http.StatusOK, lot)
+		return c.String(http.StatusBadRequest, "Bad request.")
 	})
 
 	e.DELETE("/magazines/:id", func(c echo.Context) error {
-		for i, magazine := range lot {
-			if strconv.Itoa(magazine.Id) == c.Param("id") {
-				lot = append(lot[:i], lot[i+1:]...)
+		m := readJson()
 
-				return c.JSON(http.StatusOK, lot)
+		for i, magazine := range m {
+			if strconv.Itoa(magazine.Id) == c.Param("id") {
+				m = append(m[:i], m[i+1:]...)
+				writeJson(m)
+
+				return c.JSON(http.StatusOK, m)
 			}
 		}
 		return c.String(http.StatusBadRequest, "Bad request.")
